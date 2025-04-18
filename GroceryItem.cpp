@@ -53,10 +53,14 @@ return [lhs, rhs, EPSILON1, EPSILON2]{
 
 // Default and Conversion Constructor
 ///////////////////////// TO-DO (2) //////////////////////////////
-: _upcCode   { std::move(upcCode)   }
-, _brandName { std::move(brandName) }
-, _productName{ std::move(productName) }
-, _price     { price }
+GroceryItem::GroceryItem( std::string productName,
+                          std::string brandName,
+                          std::string upcCode,
+                          double      price )
+: _upcCode{ std::move( upcCode ) },
+  _brandName{ std::move( brandName ) },
+  _productName{ std::move( productName ) },
+  _price{ price }
 /////////////////////// END-TO-DO (2) ////////////////////////////
 {}                                                                    // Avoid setting values in constructor's body (when possible)
 
@@ -65,10 +69,11 @@ return [lhs, rhs, EPSILON1, EPSILON2]{
 
 // Copy constructor
 ///////////////////////// TO-DO (3) //////////////////////////////
-: _upcCode   { other._upcCode   }
-, _brandName { other._brandName }
-, _productName{ other._productName }
-, _price     { other._price }
+GroceryItem::GroceryItem( GroceryItem const & other )
+: _upcCode{ other._upcCode },
+  _brandName{ other._brandName },
+  _productName{ other._productName },
+  _price{ other._price }
 /////////////////////// END-TO-DO (3) ////////////////////////////
 {}                                                                    // Avoid setting values in constructor's body (when possible)
 
@@ -77,10 +82,11 @@ return [lhs, rhs, EPSILON1, EPSILON2]{
 
 // Move constructor
 ///////////////////////// TO-DO (4) //////////////////////////////
-: _upcCode   { std::move(other._upcCode)   }
-, _brandName { std::move(other._brandName) }
-, _productName{ std::move(other._productName) }
-, _price     { other._price }
+GroceryItem::GroceryItem( GroceryItem && other ) noexcept
+: _upcCode{ std::move( other._upcCode ) },
+  _brandName{ std::move( other._brandName ) },
+  _productName{ std::move( other._productName ) },
+  _price{ other._price }
 /////////////////////// END-TO-DO (4) ////////////////////////////
 {}
 
@@ -121,7 +127,7 @@ return *this;
 
 // Destructor
 ///////////////////////// TO-DO (7) //////////////////////////////
-= default;
+GroceryItem::~GroceryItem() noexcept = default;
 /////////////////////// END-TO-DO (7) ////////////////////////////
 
 
@@ -218,8 +224,10 @@ return *this;
 
 // brandName(...)
 ///////////////////////// TO-DO (16) //////////////////////////////
-_brandName = std::move(newBrandName);
-return *this;
+{
+  _brandName = std::move( newBrandName );
+  return *this;
+}
 /////////////////////// END-TO-DO (16) ////////////////////////////
 
 
@@ -228,8 +236,10 @@ return *this;
 // productName(...)
 GroceryItem & GroceryItem::productName( std::string newProductName ) &
 ///////////////////////// TO-DO (17) //////////////////////////////
-_productName = std::move(newProductName);
-return *this;
+{
+  _productName = std::move( newProductName );
+  return *this;
+}
 /////////////////////// END-TO-DO (17) ////////////////////////////
 
 
@@ -237,8 +247,10 @@ return *this;
 
 // price(...)
 ///////////////////////// TO-DO (18) //////////////////////////////
-_price = newPrice;
-return *this;
+{
+  _price = newPrice;
+  return *this;
+}
 /////////////////////// END-TO-DO (18) ////////////////////////////
 
 
