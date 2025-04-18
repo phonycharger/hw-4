@@ -1,7 +1,11 @@
 ///////////////////////// TO-DO (1) //////////////////////////////
-  /// Include necessary header files
-  /// Hint:  Include what you use, use what you include
+#include <fstream>
+#include <iomanip>
+#include <iterator>
+#include <algorithm>
+#include <utility>
 
+#include "GroceryStore.hpp"
 /////////////////////// END-TO-DO (1) ////////////////////////////
 
 
@@ -23,17 +27,11 @@ GroceryStore::GroceryStore( const std::string & persistentInventoryDB )
   //     "00021000043309"     9
 
   ///////////////////////// TO-DO (2) //////////////////////////////
-    /// While no errors have been detected and not end-of-file, read the inventory record from the input stream and then add that
-    /// information to the memory resident inventory database.
-    ///
-    /// Hint: Since we didn't define an InventoryRecord class that defines the extraction operator (best practices says we should
-    ///       have), extract the quoted string and the quantity attributes directly
-    ///
-    /// Hint: Just as you did in class GroceryItem, use std::quoted to read quoted strings.  Don't try to parse the quotes yourself.
-    ///       See
-    ///        1) https://en.cppreference.com/w/cpp/io/manip/quoted
-    ///        2) https://www.youtube.com/watch?v=Mu-GUZuU31A
-
+using std::quoted;
+std::string upc;
+unsigned int qty{};
+while (fin >> std::ws >> quoted(upc) >> qty)
+  _inventoryDB[upc] += qty;  
   /////////////////////// END-TO-DO (2) ////////////////////////////
 }                                                                 // File is closed as fin goes out of scope (RAII)
 
@@ -62,23 +60,25 @@ GroceryStore::GroceryItemsSold GroceryStore::ringUpCustomer( const ShoppingCart 
 
 
   ///////////////////////// TO-DO (3) //////////////////////////////
-    /// Print out a receipt containing a full description of the grocery items (obtained from the database of all groceries in the world) in
-    /// the customer's shopping cart along with the total amount due. As items are being scanned, decrement the quantity on hand for
-    /// that grocery item in the store's inventory.
-    ///
-    ///
-    /// Hint:  Here's some pseudocode to get you started.
-    ///       1        Initialize the amount due to zero
-    ///       2        For each grocery item in the customer's shopping cart
-    ///       2.1          If the item is not found in the world wide grocery item database, indicate on the receipt it's free of charge
-    ///       2.2          Otherwise
-    ///       2.2.1            Print the grocery item's full description on the receipt
-    ///       2.2.2            Add the grocery item's price to the amount due
-    ///       2.2.3            If the grocery item is something the store sells (the item is in the store's inventory)
-    ///       2.2.3.1              Decrease the number of items on hand for the item sold
-    ///       2.2.3.2              Add the items's UPC to the list of groceries purchased
-    ///       3         Print the total amount due on the receipt
+double amountDue{0.0};
+for (const auto & [upc, cartItem] : shoppingCart)
+{
+  auto * dbItem = worldWideGroceryDatabase.find(GroceryItemDatabase::Key{upc});
+  if (!dbItem)
+  {
+    receipt << '\t' << std::quoted(upc) << " not found, the item is free!\n";
+    continue;
+  }
 
+  receipt << '\t' << *dbItem << '\n';
+  amountDue += dbItem->price();
+  if (auto itr = _inventoryDB.find(upc); itr != _inventoryDB.end() && itr->second)
+    --itr->second;
+
+  purchasedGroceries.insert(upc);
+}
+receipt << "\t-------------------------\n\tTotal  $" << amountDue << "\n\n";
+return purchasedGroceries;
   /////////////////////// END-TO-DO (3) ////////////////////////////
 
   return purchasedGroceries;
@@ -95,9 +95,13 @@ GroceryStore::GroceryItemsSold GroceryStore::ringUpCustomers( const ShoppingCart
   GroceryItemsSold todaysSales;                                   // a collection of unique UPCs of grocery items sold
 
   ///////////////////////// TO-DO (4) //////////////////////////////
-    ///  Ring up each customer accumulating the groceries purchased
-    ///  Hint:  merge each customer's purchased groceries into today's sales.  (https://en.cppreference.com/w/cpp/container/set/merge)
-
+for (const auto & [customer, cart] : shoppingCarts)
+{
+  receipt << customer << "'s shopping cart contains:\n";
+  GroceryItemsSold bought = ringUpCustomer(cart, receipt);
+  todaysSales.merge(std::move(bought));
+}
+return todaysSales;
   /////////////////////// END-TO-DO (4) ////////////////////////////
 
   return todaysSales;
@@ -116,25 +120,36 @@ void GroceryStore::reorderItems( GroceryItemsSold & todaysSales, std::ostream & 
                                                                         // full description of the item and the item's price.
 
   ///////////////////////// TO-DO (5) //////////////////////////////
-    /// For each grocery item that has fallen below the reorder threshold, assume an order has been placed and now the shipment has
-    /// arrived. Update the store's inventory to reflect the additional items on hand.
-    ///
-    /// Hint:  Here's some pseudocode to get you started.
-    ///        1       For each grocery item sold today
-    ///        1.1         If the grocery item is not in the store's inventory or if the number of grocery items on hand has fallen below the re-order threshold (REORDER_THRESHOLD)
-    ///        1.1.1           If the grocery item is not in the world wide grocery item database,
-    ///        1.1.1.1             display just the UPC
-    ///        1.1.2           Otherwise,
-    ///        1.1.2.1             display the grocery item's full description
-    ///        1.1.3           If the grocery item is not in the store's inventory
-    ///        1.1.3.1             display a notice indicating the grocery item is no longer sold in this store and will not be re-ordered
-    ///        1.1.4           Otherwise,
-    ///        1.1.4.1             Display the current quantity on hand and the quantity re-ordered
-    ///        1.1.4.2             Increase the quantity on hand by the number of items ordered and received (LOT_COUNT)
-    ///        2       Reset the list of grocery item sold today so the list can be reused again later
-    ///
-    /// Take special care to avoid excessive searches in your solution
+unsigned index{1};
+for (auto it = todaysSales.begin(); it != todaysSales.end(); ++it, ++index)
+{
+  const std::string & upc = *it;
+  auto * dbItem = worldWideGroceryDatabase.find(GroceryItemDatabase::Key{upc});
+  auto invIt = _inventoryDB.find(upc);
 
+  reorderReport << ' ' << index << ":  ";
+  if (dbItem) reorderReport << '{' << *dbItem << "} \n";
+  else        reorderReport << '"' << upc << "\" (description unavailable)\n";
+
+  if (invIt == _inventoryDB.end())
+  {
+    reorderReport << "\t*** no longer sold in this store and will not be re-ordered\n\n";
+    continue;
+  }
+
+  if (invIt->second >= REORDER_THRESHOLD)
+  {
+    reorderReport << '\n';   // nothing to do
+    continue;
+  }
+
+  unsigned short below = REORDER_THRESHOLD - invIt->second;
+  reorderReport << "\tonly " << invIt->second << " remain in stock which is "
+                << below << " unit(s) below reorder threshold (" << REORDER_THRESHOLD
+                << "), re-ordering " << LOT_COUNT << " more\n\n";
+  invIt->second += LOT_COUNT;
+}
+todaysSales.clear();
   /////////////////////// END-TO-DO (5) ////////////////////////////
 }
 
