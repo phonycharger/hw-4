@@ -3,9 +3,9 @@
 #include <iomanip>
 #include <iterator>
 #include <algorithm>
-#include <utility>
 
 #include "GroceryStore.hpp"
+#include "GroceryItemDatabase.hpp"
 /////////////////////// END-TO-DO (1) ////////////////////////////
 
 
@@ -143,7 +143,7 @@ for (auto it = todaysSales.begin(); it != todaysSales.end(); ++it, ++index)
     continue;
   }
 
-  unsigned short below = REORDER_THRESHOLD - invIt->second;
+unsigned int below = REORDER_THRESHOLD - invIt->second;
   reorderReport << "\tonly " << invIt->second << " remain in stock which is "
                 << below << " unit(s) below reorder threshold (" << REORDER_THRESHOLD
                 << "), re-ordering " << LOT_COUNT << " more\n\n";
