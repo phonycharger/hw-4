@@ -78,7 +78,6 @@ for (const auto & [upc, cartItem] : shoppingCart)
   purchasedGroceries.insert(upc);
 }
 receipt << "\t-------------------------\n\tTotal  $" << amountDue << "\n\n";
-return purchasedGroceries;
   /////////////////////// END-TO-DO (3) ////////////////////////////
 
   return purchasedGroceries;
@@ -101,7 +100,6 @@ for (const auto & [customer, cart] : shoppingCarts)
   GroceryItemsSold bought = ringUpCustomer(cart, receipt);
   todaysSales.merge(std::move(bought));
 }
-return todaysSales;
   /////////////////////// END-TO-DO (4) ////////////////////////////
 
   return todaysSales;
