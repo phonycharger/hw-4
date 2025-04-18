@@ -355,7 +355,8 @@ std::istream & operator>>( std::istream & stream, GroceryItem & groceryItem )
 
   char delimiter = '\x{00}';                                          // C++23 delimited escape sequence for the character whose value is zero (the null character)
   ///////////////////////// TO-DO (21) //////////////////////////////
- using std::quoted;
+(void)delimiter; 
+  using std::quoted;
 
   std::string upc, brand, product;
   double price{};
