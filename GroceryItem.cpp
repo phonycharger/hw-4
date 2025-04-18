@@ -123,6 +123,7 @@ GroceryItem & GroceryItem::operator=( GroceryItem && rhs ) & noexcept
     _price       = rhs._price;
   }
   return *this;
+}
 /////////////////////// END-TO-DO (6) ////////////////////////////
 
 
