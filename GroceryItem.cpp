@@ -355,27 +355,27 @@ std::istream & operator>>( std::istream & stream, GroceryItem & groceryItem )
 
   char delimiter = '\x{00}';                                          // C++23 delimited escape sequence for the character whose value is zero (the null character)
   ///////////////////////// TO-DO (21) //////////////////////////////
-using std::quoted;
+ using std::quoted;
 
-std::string upc, brand, product;
-double price {};
-char comma {};
+  std::string upc, brand, product;
+  double price{};
+  char comma{};
 
-bool ok = static_cast<bool>(
-             stream >> std::ws >> quoted( upc    ) >> comma
-                    >> std::ws >> quoted( brand  ) >> comma
-                    >> std::ws >> quoted( product) >> comma
-                    >> price );
+  bool ok = static_cast<bool>(
+               stream >> std::ws >> quoted(upc)     >> comma
+                      >> std::ws >> quoted(brand)   >> comma
+                      >> std::ws >> quoted(product) >> comma
+                      >> price );
 
-if (ok && comma == ',')
-  groceryItem = GroceryItem{ std::move(product),
-                             std::move(brand),
-                             std::move(upc),
-                             price };
-else
-  stream.setstate( std::ios::failbit );
+  if (ok && comma == ',')
+    groceryItem = GroceryItem{ std::move(product),
+                               std::move(brand),
+                               std::move(upc),
+                               price };
+  else
+    stream.setstate( std::ios::failbit );
 
-return stream;
+  return stream;
   /////////////////////// END-TO-DO (21) ////////////////////////////
 }
 
